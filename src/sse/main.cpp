@@ -117,10 +117,19 @@ namespace
     // RE::CreateMessage's second parameter is typed as IMessageBoxCallback* in CommonLib,
     // but Skyrim internally stores it as OldMessageBoxCallback::Callback* (raw function ptr).
     // Passing a vtable object causes a crash - pass a static function cast instead.
-    void XelLaunchCallbackFn(RE::IMessageBoxCallback::Message a_msg)
+#ifdef XEL_NG
+    // alandtse's CommonLibSSE-NG has no IMessageBoxCallback::Message; the engine hands the callback the pressed button's index
+    using XelButton = std::uint8_t;
+    constexpr XelButton kXelYesButton = 0;
+#else
+    using XelButton = RE::IMessageBoxCallback::Message;
+    constexpr XelButton kXelYesButton = RE::IMessageBoxCallback::Message::kUnk0;
+#endif
+
+    void XelLaunchCallbackFn(XelButton a_msg)
     {
         // Button 0 = first button ("Yes"), anything else = cancel/No
-        if (a_msg == RE::IMessageBoxCallback::Message::kUnk0) {
+        if (a_msg == kXelYesButton) {
             std::thread([ref = g_pendingLaunchRef]() {
                 LaunchXEdit();
                 if (g_xEditRunning.load(std::memory_order_acquire) && ref.refID != 0)
@@ -283,6 +292,7 @@ namespace
 
 }  // namespace
 
+#ifndef XEL_NG  // the ng build (alandtse CommonLibSSE-NG) generates the SKSEPluginInfo block, see ng.cmake
 SKSEPluginVersion = []() noexcept -> SKSE::PluginVersionData
 {
     SKSE::PluginVersionData v;
@@ -302,6 +312,7 @@ SKSE_EXPORT bool SKSEPlugin_Query(
     a_info->version     = SKSEPlugin_Version.pluginVersion;
     return true;
 }
+#endif
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {

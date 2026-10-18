@@ -94,3 +94,9 @@ cmake --build build-32 --config Release
 ## License
 
 GPL-3.0 - Copyright 2026 Modding Forge
+
+## Fork: Skyrim 1.7.x
+
+The older CommonLibSSE-NG that `src/sse` fetches cannot read the version 5 Address Library files of Skyrim 1.7.x. `ng.cmake` builds `SSEEditLinker.dll` (plugin name `xedit_linker_sse`) on alandtse's CommonLibSSE-NG for Skyrim 1.6.1170 and 1.7.x; it is included from a parent CMake project that defines `ng_plugin()` (a thin wrapper around `add_commonlibsse_plugin`). In that build `XEL_NG` is defined, which leaves out the hand-written `SKSEPluginVersion` / `SKSEPlugin_Query` (the library generates them) and types the message box callback as the plain button index the engine passes. The message box function (Address Library id 52269) is the same one CommonLibSSE-NG's `MessageBoxMenu::Create` calls on 1.7.104.
+
+The release zip contains only the DLL. Install xEdit Linker from Nexus first and let the DLL overwrite its own.
